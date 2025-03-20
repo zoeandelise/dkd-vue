@@ -57,18 +57,20 @@
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
-    <el-table v-loading="loading" :data="regionList" @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="区域ID" align="center" prop="id" />
-      <el-table-column label="区域名称" align="center" prop="regionName" />
-      <el-table-column label="备注" align="center" prop="remark" />
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
-        <template #default="scope">
-          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['manage:region:edit']">修改</el-button>
-          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['manage:region:remove']">删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+<!-- 区域列表 -->
+<el-table v-loading="loading" :data="regionList" @selection-change="handleSelectionChange">
+  <el-table-column type="selection" width="55" align="center" />
+  <el-table-column label="序号" type="index" width="50" align="center" prop="id" />
+  <el-table-column label="区域名称" align="center" prop="regionName" />
+  <el-table-column label="点位数" align="center" prop="nodeCount" />
+  <el-table-column label="备注说明" align="center" prop="remark" />
+  <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+    <template #default="scope">
+      <el-button link type="primary"  @click="handleUpdate(scope.row)" v-hasPermi="['manage:region:edit']">修改</el-button>
+      <el-button link type="primary"  @click="handleDelete(scope.row)" v-hasPermi="['manage:region:remove']">删除</el-button>
+    </template>
+  </el-table-column>
+</el-table>
     
     <pagination
       v-show="total>0"
@@ -84,7 +86,7 @@
         <el-form-item label="区域名称" prop="regionName">
           <el-input v-model="form.regionName" placeholder="请输入区域名称" />
         </el-form-item>
-        <el-form-item label="备注" prop="remark">
+        <el-form-item label="备注说明" prop="remark">
           <el-input v-model="form.remark" type="textarea" placeholder="请输入内容" />
         </el-form-item>
       </el-form>
@@ -125,7 +127,7 @@ const data = reactive({
       { required: true, message: "区域名称不能为空", trigger: "blur" }
     ],
     remark: [
-      { required: true, message: "备注不能为空", trigger: "blur" }
+      { required: true, message: "备注说明不能为空", trigger: "blur" }
     ]
   }
 });

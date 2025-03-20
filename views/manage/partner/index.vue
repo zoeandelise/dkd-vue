@@ -59,11 +59,11 @@
 
     <el-table v-loading="loading" :data="partnerList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="合作商ID" align="center" prop="id" />
+      <el-table-column label="主键id" align="center" prop="id" />
       <el-table-column label="合作商名称" align="center" prop="partnerName" />
       <el-table-column label="联系人" align="center" prop="contactPerson" />
       <el-table-column label="联系电话" align="center" prop="contactPhone" />
-      <el-table-column label="分成比例" align="center" prop="commissionRate" />
+      <el-table-column label="分成比例" align="center" prop="profitRatio" />
       <el-table-column label="账号" align="center" prop="account" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
@@ -81,7 +81,7 @@
       @pagination="getList"
     />
 
-    <!-- 添加或修改合作商信息管理对话框 -->
+    <!-- 添加或修改合作商管理对话框 -->
     <el-dialog :title="title" v-model="open" width="500px" append-to-body>
       <el-form ref="partnerRef" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="合作商名称" prop="partnerName">
@@ -93,17 +93,14 @@
         <el-form-item label="联系电话" prop="contactPhone">
           <el-input v-model="form.contactPhone" placeholder="请输入联系电话" />
         </el-form-item>
-        <el-form-item label="分成比例" prop="commissionRate">
-          <el-input v-model="form.commissionRate" placeholder="请输入分成比例" />
+        <el-form-item label="分成比例" prop="profitRatio">
+          <el-input v-model="form.profitRatio" placeholder="请输入分成比例" />
         </el-form-item>
         <el-form-item label="账号" prop="account">
           <el-input v-model="form.account" placeholder="请输入账号" />
         </el-form-item>
         <el-form-item label="密码" prop="password">
           <el-input v-model="form.password" placeholder="请输入密码" />
-        </el-form-item>
-        <el-form-item label="备注" prop="remark">
-          <el-input v-model="form.remark" type="textarea" placeholder="请输入内容" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -148,6 +145,9 @@ const data = reactive({
     contactPhone: [
       { required: true, message: "联系电话不能为空", trigger: "blur" }
     ],
+    profitRatio: [
+      { required: true, message: "分成比例不能为空", trigger: "blur" }
+    ],
     account: [
       { required: true, message: "账号不能为空", trigger: "blur" }
     ],
@@ -159,7 +159,7 @@ const data = reactive({
 
 const { queryParams, form, rules } = toRefs(data);
 
-/** 查询合作商信息管理列表 */
+/** 查询合作商管理列表 */
 function getList() {
   loading.value = true;
   listPartner(queryParams.value).then(response => {
@@ -182,7 +182,7 @@ function reset() {
     partnerName: null,
     contactPerson: null,
     contactPhone: null,
-    commissionRate: null,
+    profitRatio: null,
     account: null,
     password: null,
     createTime: null,
@@ -217,7 +217,7 @@ function handleSelectionChange(selection) {
 function handleAdd() {
   reset();
   open.value = true;
-  title.value = "添加合作商信息管理";
+  title.value = "添加合作商管理";
 }
 
 /** 修改按钮操作 */
@@ -227,7 +227,7 @@ function handleUpdate(row) {
   getPartner(_id).then(response => {
     form.value = response.data;
     open.value = true;
-    title.value = "修改合作商信息管理";
+    title.value = "修改合作商管理";
   });
 }
 
@@ -255,7 +255,7 @@ function submitForm() {
 /** 删除按钮操作 */
 function handleDelete(row) {
   const _ids = row.id || ids.value;
-  proxy.$modal.confirm('是否确认删除合作商信息管理编号为"' + _ids + '"的数据项？').then(function() {
+  proxy.$modal.confirm('是否确认删除合作商管理编号为"' + _ids + '"的数据项？').then(function() {
     return delPartner(_ids);
   }).then(() => {
     getList();

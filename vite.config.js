@@ -28,6 +28,11 @@ export default defineConfig(({ mode, command }) => {
       port: 80,
       host: true,
       open: true,
+      watch: {
+        usePolling: true,
+        interval: 1000,
+        ignored: ['**/node_modules/**', '**/dist/**']
+      },
       proxy: {
         // https://cn.vitejs.dev/config/#server-proxy
         '/dev-api': {

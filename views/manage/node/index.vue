@@ -9,20 +9,10 @@
           @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="商圈类型" prop="businessType">
-        <el-select v-model="queryParams.businessType" placeholder="请选择商圈类型" clearable>
-          <el-option
-            v-for="dict in business_type"
-            :key="dict.value"
-            :label="dict.label"
-            :value="dict.value"
-          />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="所属区域ID" prop="regionId">
+      <el-form-item label="区域ID" prop="regionId">
         <el-input
           v-model="queryParams.regionId"
-          placeholder="请输入所属区域ID"
+          placeholder="请输入区域ID"
           clearable
           @keyup.enter="handleQuery"
         />
@@ -85,7 +75,7 @@
 
     <el-table v-loading="loading" :data="nodeList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="点位ID" align="center" prop="id" />
+      <el-table-column label="主键id" align="center" prop="id" />
       <el-table-column label="点位名称" align="center" prop="nodeName" />
       <el-table-column label="详细地址" align="center" prop="address" />
       <el-table-column label="商圈类型" align="center" prop="businessType">
@@ -93,7 +83,7 @@
           <dict-tag :options="business_type" :value="scope.row.businessType"/>
         </template>
       </el-table-column>
-      <el-table-column label="所属区域ID" align="center" prop="regionId" />
+      <el-table-column label="区域ID" align="center" prop="regionId" />
       <el-table-column label="合作商ID" align="center" prop="partnerId" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
@@ -130,8 +120,8 @@
             ></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="所属区域ID" prop="regionId">
-          <el-input v-model="form.regionId" placeholder="请输入所属区域ID" />
+        <el-form-item label="区域ID" prop="regionId">
+          <el-input v-model="form.regionId" placeholder="请输入区域ID" />
         </el-form-item>
         <el-form-item label="合作商ID" prop="partnerId">
           <el-input v-model="form.partnerId" placeholder="请输入合作商ID" />
@@ -169,8 +159,6 @@ const data = reactive({
     pageNum: 1,
     pageSize: 10,
     nodeName: null,
-    address: null,
-    businessType: null,
     regionId: null,
     partnerId: null,
   },
@@ -185,7 +173,7 @@ const data = reactive({
       { required: true, message: "商圈类型不能为空", trigger: "change" }
     ],
     regionId: [
-      { required: true, message: "所属区域ID不能为空", trigger: "blur" }
+      { required: true, message: "区域ID不能为空", trigger: "blur" }
     ],
     partnerId: [
       { required: true, message: "合作商ID不能为空", trigger: "blur" }
