@@ -62,11 +62,18 @@
       <el-table-column label="合作商ID" align="center" prop="id" />
       <el-table-column label="合作商名称" align="center" prop="partnerName" />
       <el-table-column label="联系人" align="center" prop="contactPerson" />
-      <el-table-column label="联系电话" align="center" prop="contactPhone" />
-      <el-table-column label="分成比例" align="center" prop="commissionRate" />
-      <el-table-column label="账号" align="center" prop="account" />
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+      <el-table-column label="点位数" align="center" prop="nodeCount" />
+      <el-table-column label="分成比例" align="center" prop="profitRatio">
         <template #default="scope">
+          {{ scope.row.profitRatio }}%
+        </template>
+      </el-table-column>
+      <el-table-column label="账号" align="center" prop="account"  />
+      <el-table-column label="联系电话" align="center" prop="contactPhone" />
+      <el-table-column label="操作" width="350" class-name="small-padding fixed-width">
+        <template #default="scope">
+          <el-button link type="primary" icon="Edit" @click="handleResetPwd(scope.row)" v-hasPermi="['manage:partner:resetPwd']">重置密码</el-button>
+          <el-button link type="primary" icon="Edit" @click="getPartnerInfo(scope.row)" v-hasPermi="['manage:partner:query']">查看详情</el-button>
           <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['manage:partner:edit']">修改</el-button>
           <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['manage:partner:remove']">删除</el-button>
         </template>
@@ -93,13 +100,13 @@
         <el-form-item label="联系电话" prop="contactPhone">
           <el-input v-model="form.contactPhone" placeholder="请输入联系电话" />
         </el-form-item>
-        <el-form-item label="分成比例" prop="commissionRate">
-          <el-input v-model="form.commissionRate" placeholder="请输入分成比例" />
+        <el-form-item label="分成比例" prop="profitRatio">
+          <el-input v-model="form.profitRatio" placeholder="请输入分成比例" />
         </el-form-item>
-        <el-form-item label="账号" prop="account">
+        <el-form-item label="账号" prop="account" v-if="form.id==null">
           <el-input v-model="form.account" placeholder="请输入账号" />
         </el-form-item>
-        <el-form-item label="密码" prop="password">
+        <el-form-item label="密码" prop="password" v-if="form.id==null">
           <el-input v-model="form.password" placeholder="请输入密码" />
         </el-form-item>
         <el-form-item label="备注" prop="remark">
@@ -113,11 +120,27 @@
         </div>
       </template>
     </el-dialog>
+   
+    <!-- 查看详情对话框 -->
+    <el-dialog title="合作商详情" v-model="partnerInfoOpen" width="500px" append-to-body>
+      <el-row :gutter="20" class="mb-2">
+        <el-col :span="12"><span class="label-text">合作商名称：</span><span class="value-text">{{ form.partnerName }}</span></el-col>
+        <el-col :span="12"><span class="label-text">联系人：</span><span class="value-text">{{ form.contactPerson }}</span></el-col>
+      </el-row>
+      <el-row :gutter="20">
+        <el-col :span="12"><span class="label-text">联系电话：</span><span class="value-text">{{ form.contactPhone }}</span></el-col>
+        <el-col :span="12"><span class="label-text">分成比例：</span><span class="value-text">{{ form.profitRatio }}</span></el-col>
+      </el-row>
+    </el-dialog>
+
+    
   </div>
 </template>
 
+
+
 <script setup name="Partner">
-import { listPartner, getPartner, delPartner, addPartner, updatePartner } from "@/api/manage/partner";
+import { listPartner, getPartner, delPartner, addPartner, updatePartner, resetPartnerPwd } from "@/api/manage/partner";
 
 const { proxy } = getCurrentInstance();
 
@@ -182,7 +205,7 @@ function reset() {
     partnerName: null,
     contactPerson: null,
     contactPhone: null,
-    commissionRate: null,
+    profitRatio: null,
     account: null,
     password: null,
     createTime: null,
@@ -231,6 +254,19 @@ function handleUpdate(row) {
   });
 }
 
+/** 查看详情按钮操作 */
+const partnerInfoOpen = ref(false);
+function getPartnerInfo(row) {
+  reset();
+  const _id = row.id
+  getPartner(_id).then(response => {
+    form.value = response.data;
+    partnerInfoOpen.value = true;
+  });
+}
+
+
+
 /** 提交按钮 */
 function submitForm() {
   proxy.$refs["partnerRef"].validate(valid => {
@@ -263,12 +299,24 @@ function handleDelete(row) {
   }).catch(() => {});
 }
 
+/** 重置密码按钮操作 */
+function handleResetPwd(row) {
+  const _ids = row.id || ids.value;
+  proxy.$modal.confirm('是否确认重置合作商密码编号为"' + _ids + '"的数据项？').then(function() {
+    return resetPartnerPwd(_ids);
+  }).then(() => {
+    getList();
+    proxy.$modal.msgSuccess("重置密码成功");
+  }).catch(() => {});
+}
+
 /** 导出按钮操作 */
 function handleExport() {
   proxy.download('manage/partner/export', {
     ...queryParams.value
   }, `partner_${new Date().getTime()}.xlsx`)
 }
+
 
 getList();
 </script>
