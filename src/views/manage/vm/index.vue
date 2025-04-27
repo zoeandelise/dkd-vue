@@ -50,7 +50,7 @@
       </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
-          <el-button link type="primary" @click="handleHuodao(scope.row)" v-hasPermi="['manage:vm:edit']">货道</el-button>
+          <el-button link type="primary" @click="handleGoods(scope.row)" v-hasPermi="['manage:vm:edit']">货道</el-button>
           <el-button link type="primary" @click="getPolicyList(scope.row)" v-hasPermi="['manage:vm:edit']">策略</el-button>
           <el-button link type="primary" @click="handleUpdate(scope.row)" v-hasPermi="['manage:vm:edit']">修改</el-button>
         </template>
@@ -125,6 +125,9 @@
   </template>
 </el-dialog>
 
+<!-- 货道组件 -->
+<ChannelDialog :goodVisible="goodVisible" :goodData="goodData" @handleCloseGood="handleCloseGood"></ChannelDialog>
+<!-- end -->
 
   </div>
 </template>
@@ -351,8 +354,26 @@ function getNodeNameList() {
   });
 }
 
+
 getVmTypeList();
 getPartnerNameList();
 getNodeNameList();
 getList();
+ // ********************货道********************
+    // 货道组件
+    import ChannelDialog from './components/ChannelDialog.vue';
+    const goodVisible = ref(false); //货道弹层显示隐藏
+    const goodData = ref({}); //货道信息用来拿取 vmTypeId和innerCode
+    // 打开货道弹层
+    const handleGoods = (row) => {
+        goodVisible.value = true;
+        goodData.value = row;
+    };
+    // 关闭货道弹层
+    const handleCloseGood = () => {
+        goodVisible.value = false;
+    };
+    // ********************货道end********************
 </script>
+
+<style lang="scss" scoped src="./index.scss"></style>
