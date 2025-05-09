@@ -25,22 +25,51 @@
           v-hasPermi="['manage:policy:add']"
         >新增</el-button>
       </el-col>
+      <el-col :span="1.5">
+        <el-button
+          type="success"
+          plain
+          icon="Edit"
+          :disabled="single"
+          @click="handleUpdate"
+          v-hasPermi="['manage:policy:edit']"
+        >修改</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button
+          type="danger"
+          plain
+          icon="Delete"
+          :disabled="multiple"
+          @click="handleDelete"
+          v-hasPermi="['manage:policy:remove']"
+        >删除</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button
+          type="warning"
+          plain
+          icon="Download"
+          @click="handleExport"
+          v-hasPermi="['manage:policy:export']"
+        >导出</el-button>
+      </el-col>
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
     <el-table v-loading="loading" :data="policyList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="序号" align="center" prop="policyId" />
+      <el-table-column label="序号" type="index" width="50" align="center" prop="policyId" />
       <el-table-column label="策略名称" align="center" prop="policyName" />
       <el-table-column label="策略方案" align="center" prop="discount" />
       <el-table-column label="创建时间" align="center" prop="createTime" width="180">
         <template #default="scope">
-          <span>{{ parseTime(scope.row.createTime, '{y}-{m}-{d}') }}</span>
+          <span>{{ parseTime(scope.row.createTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
-          <el-button link type="primary"  @click="getPolicyInfo(scope.row)" v-hasPermi="['manage:policy:list']">查看详情</el-button>
+          <el-button link type="primary"  @click="getPolicyInfo(scope.row)" v-hasPermi="['manage:vm:list']">查看详情</el-button>
           <el-button link type="primary"  @click="handleUpdate(scope.row)" v-hasPermi="['manage:policy:edit']">修改</el-button>
           <el-button link type="primary"  @click="handleDelete(scope.row)" v-hasPermi="['manage:policy:remove']">删除</el-button>
         </template>
@@ -48,7 +77,7 @@
     </el-table>
     
     <pagination
-      v-show="total>0 "
+      v-show="total>0"
       :total="total"
       v-model:page="queryParams.pageNum"
       v-model:limit="queryParams.pageSize"
@@ -62,13 +91,7 @@
           <el-input v-model="form.policyName" placeholder="请输入策略名称" />
         </el-form-item>
         <el-form-item label="策略方案" prop="discount">
-          <el-input-number 
-            v-model="form.discount" 
-            :min="1" 
-            :max="100" 
-            :step="1" 
-            :precision="0"
-            placeholder="请输入策略方案，如：80代表8折" />
+          <el-input-number :min="1" :max="100" :precision="0" v-model="form.discount" placeholder="请输入策略方案" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -78,14 +101,15 @@
         </div>
       </template>
     </el-dialog>
-    <!-- 查看策略详情 -->
-    <el-dialog :title="title" v-model="policyOpen" width="500px" append-to-body>
-      <span>策略名称：{{ form.policyName }}</span>
-      <br />
-      <span>包含设备：</span>
-      <el-table :data="vmList" border>
-        <el-table-column label="序号" align="center" type="index" width="50" />
-        <el-table-column label="点位地址" align="center" prop="addr" />
+    <!-- 策略详情对话框 -->
+     <el-dialog title="策略详情" v-model="policyOpen" width="500px" append-to-body>
+      <el-form-item label="策略名称" prop="policyName">
+          <el-input v-model="form.policyName" placeholder="请输入策略名称" disabled />
+        </el-form-item>
+      <label>包含设备：</label>
+      <el-table  :data="vmList" >
+        <el-table-column label="序号" type="index" width="55" align="center" />
+        <el-table-column label="点位地址" align="center" prop="addr" show-overflow-tooltip="true"/>
         <el-table-column label="设备编号" align="center" prop="innerCode" />
       </el-table>
     </el-dialog>
@@ -94,9 +118,11 @@
 
 <script setup name="Policy">
 import { listPolicy, getPolicy, delPolicy, addPolicy, updatePolicy } from "@/api/manage/policy";
-import {loadAllParams} from "@/api/page";
-import { listVm } from "@/api/manage/vm";
-const { proxy } = getCurrentInstance();   
+import{listVm} from "@/api/manage/vm";
+import{loadAllParams} from "@/api/page";
+import { ref } from "vue";
+
+const { proxy } = getCurrentInstance();
 
 const policyList = ref([]);
 const open = ref(false);
@@ -191,21 +217,19 @@ function handleUpdate(row) {
     title.value = "修改策略管理";
   });
 }
-
-/** 查看策略详情按钮操作 */
-const vmList = ref([]);
-const policyOpen = ref(false);
-function getPolicyInfo(row) {
-  console.log(row);
+/* 查看策略详情 */
+const policyOpen=ref(false);
+const vmList=ref([]);
+function getPolicyInfo(row){
+  //1. 获取策略信息
   form.value = row;
-  loadAllParams.policyId = row.policyId;
+  //2. 根据策略id，查询设备列表
+  loadAllParams.policyId=row.policyId;
   listVm(loadAllParams).then(response => {
-    title.value = "查看策略管理";
-    vmList.value = response.rows;
-    policyOpen.value = true;
+    vmList.value=response.rows;
+    policyOpen.value=true;
   });
 }
-
 
 /** 提交按钮 */
 function submitForm() {
@@ -248,4 +272,3 @@ function handleExport() {
 
 getList();
 </script>
-

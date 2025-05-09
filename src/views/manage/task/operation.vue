@@ -29,6 +29,20 @@
           />
         </el-select>
       </el-form-item>
+      <el-form-item label="工单类型" prop="productTypeId">
+        <el-select
+          v-model="queryParams.productTypeId"
+          placeholder="请选择工单类型"
+          clearable
+        >
+          <el-option
+            v-for="dict in taskTypeList"
+            :key="dict.typeId"
+            :label="dict.typeName"
+            :value="dict.typeId"
+          />
+        </el-select>
+      </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="Search" @click="handleQuery"
           >搜索</el-button
@@ -46,9 +60,6 @@
           @click="handleAdd"
           v-hasPermi="['manage:task:add']"
           >新增</el-button
-        >
-        <el-button type="primary" plain @click="openTaskConfig"
-          >工单配置</el-button
         >
       </el-col>
       <right-toolbar
@@ -87,7 +98,7 @@
           <dict-tag :options="task_status" :value="scope.row.taskStatus" />
         </template>
       </el-table-column>
-      <el-table-column label="运营人员" align="center" prop="userName" />
+      <el-table-column label="运维人员" align="center" prop="userName" />
       <el-table-column
         label="创建时间"
         align="center"
@@ -149,12 +160,7 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="补货数量：" prop="details">
-          <el-button type="text" @click="channelDetails">
-            <el-icon> <List /> </el-icon>补货清单
-          </el-button>
-        </el-form-item>
-        <el-form-item label="运营人员：" prop="userId">
+        <el-form-item label="运维人员：" prop="userId">
           <el-select
             v-model="form.userId"
             placeholder="请选择"
@@ -188,25 +194,10 @@
       :detailVisible="detailVisible"
       :taskId="taskId"
       :taskDada="form"
-      :detailData="detailData"
-      @getList="getList"
       @handleClose="handleClose"
       @handleAdd="handleAdd"
+      @getList="getList"
     ></DetailDialog>
-    <!-- end -->
-    <!-- 补货详情 -->
-    <ReplenishmentDialog
-      :channelVisible="channelVisible"
-      :innerCode="form.innerCode"
-      @getDetailList="getDetailList"
-      @handleClose="channelDetailsClose"
-    ></ReplenishmentDialog>
-    <!-- end -->
-    <!-- 工单配置 -->
-    <TaskConfig
-      :taskConfigVisible="taskConfigVisible"
-      @handleClose="handleConfigClose"
-    ></TaskConfig>
     <!-- end -->
   </div>
 </template>
@@ -218,15 +209,12 @@ import {
   delTask,
   addTask,
   updateTask,
-  getBusinessList,
-  getTaskDetails,
+  getOperationList,
 } from '@/api/manage/task';
 import { listTaskType } from '@/api/manage/taskType';
 import { loadAllParams } from '@/api/page';
 // 组件
-import DetailDialog from './components/business-detail-dialog.vue'; //详情组件
-import ReplenishmentDialog from './components/business-replenishment-dialog.vue'; //补货组件
-import TaskConfig from './components/task-config.vue';
+import DetailDialog from './components/operation-detail-dialog.vue'; //详情组件
 const { proxy } = getCurrentInstance();
 const { task_status, task_create_type } = proxy.useDict(
   'task_status',
@@ -243,12 +231,9 @@ const multiple = ref(true);
 const total = ref(0);
 const title = ref('');
 const detailVisible = ref(false); //查看详情弹层显示/隐藏
-const taskId = ref(null); //工单id
+const taskId = ref(''); //工单id
 const taskDada = ref({}); //工单详情
 const userList = ref([]); //运维人员
-const channelVisible = ref(false); //补货弹层
-const detailData = ref([]); //货道列表
-const taskConfigVisible = ref(false); //工单配置弹层
 const data = reactive({
   form: {},
   queryParams: {
@@ -258,13 +243,14 @@ const data = reactive({
     taskStatus: null,
     createType: null,
     innerCode: null,
+    userId: null,
     userName: null,
     regionId: null,
     desc: null,
     productTypeId: null,
     userId: null,
     addr: null,
-    params: { isRepair: false },
+    params: { isRepair: true },
   },
   rules: {
     innerCode: [
@@ -273,16 +259,18 @@ const data = reactive({
     productTypeId: [
       { required: true, message: '设备类型不能为空', trigger: 'blur' },
     ],
-    // details: [{ required: true, message: '补货数量不能为空', trigger: 'blur' }],
-
-    userId: [{ required: true, message: '人员不能为空', trigger: 'blur' }],
-    desc: [{ required: true, message: '备注不能为空', trigger: 'blur' }],
+    userId: [
+      { required: true, message: '人员不能为空', trigger: 'blur' },
+    ],
+    desc: [
+      { required: true, message: '备注不能为空', trigger: 'blur' },
+    ]
   },
 });
 
 const { queryParams, form, rules } = toRefs(data);
 
-/** 查询运营工单列表 */
+/** 查询运维工单列表 */
 function getList() {
   loading.value = true;
   listTask(queryParams.value).then((response) => {
@@ -311,10 +299,10 @@ function reset() {
     regionId: null,
     desc: null,
     productTypeId: null,
+    userId: null,
     addr: null,
     createTime: null,
     updateTime: null,
-    details: [],
   };
   proxy.resetForm('taskRef');
 }
@@ -348,22 +336,17 @@ function handleAdd(val) {
   }
   reset();
   open.value = true;
-  title.value = '添加运营工单';
+  title.value = '添加运维工单';
 }
 
 /** 提交按钮 */
 function submitForm() {
   proxy.$refs['taskRef'].validate((valid) => {
     if (valid) {
-      const data = form.value;
-      form.value = {
-        innerCode: data.innerCode,
-        userId: data.userId,
-        productTypeId: data.productTypeId,
-        desc: data.desc,
-        createType: 1,
-        details: data.details,
-      };
+      form.value={
+        ...form.value,
+        createType:1
+      }
       addTask(form.value).then((response) => {
         proxy.$modal.msgSuccess('新增成功');
         open.value = false;
@@ -377,7 +360,7 @@ function submitForm() {
 function handleDelete(row) {
   const _taskIds = row.taskId || ids.value;
   proxy.$modal
-    .confirm('是否确认删除运营工单编号为"' + _taskIds + '"的数据项？')
+    .confirm('是否确认删除运维工单编号为"' + _taskIds + '"的数据项？')
     .then(function () {
       return delTask(_taskIds);
     })
@@ -405,7 +388,7 @@ function getTaskTypeList() {
   // 默认时获取所有得工单类型，需要用type区别开，1:运维工单类型，2:运营工单类型
   const page = {
     ...loadAllParams,
-    type: 2,
+    type: 1,
   };
   listTaskType(page).then((response) => {
     taskTypeList.value = response.rows;
@@ -417,33 +400,16 @@ const handleCode = () => {
     getUserList();
   }
 };
-// 获取运营人员列表
+// 获取运维人员列表
 const getUserList = () => {
-  getBusinessList(form.value.innerCode).then((response) => {
+  getOperationList(form.value.innerCode).then((response) => {
     userList.value = response.data;
   });
 };
 // 获取工单详情
 const taskInfo = () => {
-  let dataArr = [];
-  let obj = {};
   getTask(taskId.value).then((response) => {
     form.value = response.data;
-  });
-  // 获取货道列表
-  getTaskDetails(taskId.value).then((res) => {
-    detailData.value = res.data;
-    detailData.value.map((taskDetail) => {
-      obj = {
-        channelCode: taskDetail.channelCode,
-        expectCapacity: taskDetail.expectCapacity,
-        skuId: taskDetail.skuId,
-        skuName: taskDetail.skuName,
-        skuImage: taskDetail.skuImage,
-      };
-      dataArr.push(obj);
-    });
-    form.value.details = dataArr;
   });
 };
 // 查看详情
@@ -455,31 +421,6 @@ const openTaskDetailDialog = (row) => {
 // 关闭详情弹层
 const handleClose = () => {
   detailVisible.value = false;
-};
-// 补货清单
-const channelDetails = () => {
-  proxy.$refs['taskRef'].validateField('innerCode', (error) => {
-    if (!error) {
-      return;
-    }
-    channelVisible.value = true;
-  });
-};
-// 关闭补货清单
-const channelDetailsClose = () => {
-  channelVisible.value = false;
-};
-// 获取货道清单数据
-const getDetailList = (val) => {
-  form.value.details = val;
-};
-// 打开工单配置弹层
-const openTaskConfig = () => {
-  taskConfigVisible.value = true;
-};
-// 关闭工单配置弹层
-const handleConfigClose = () => {
-  taskConfigVisible.value = false;
 };
 getTaskTypeList();
 

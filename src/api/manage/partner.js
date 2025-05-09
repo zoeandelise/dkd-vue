@@ -1,6 +1,6 @@
 import request from '@/utils/request'
 
-// 查询合作商信息管理列表
+// 查询合作商管理列表
 export function listPartner(query) {
   return request({
     url: '/manage/partner/list',
@@ -9,7 +9,7 @@ export function listPartner(query) {
   })
 }
 
-// 查询合作商信息管理详细
+// 查询合作商管理详细
 export function getPartner(id) {
   return request({
     url: '/manage/partner/' + id,
@@ -17,7 +17,7 @@ export function getPartner(id) {
   })
 }
 
-// 新增合作商信息管理
+// 新增合作商管理
 export function addPartner(data) {
   return request({
     url: '/manage/partner',
@@ -26,7 +26,7 @@ export function addPartner(data) {
   })
 }
 
-// 修改合作商信息管理
+// 修改合作商管理
 export function updatePartner(data) {
   return request({
     url: '/manage/partner',
@@ -35,7 +35,7 @@ export function updatePartner(data) {
   })
 }
 
-// 删除合作商信息管理
+// 删除合作商管理
 export function delPartner(id) {
   return request({
     url: '/manage/partner/' + id,
@@ -46,7 +46,7 @@ export function delPartner(id) {
 // 重置合作商密码
 export function resetPartnerPwd(id) {
   return request({
-    url: '/manage/partner/resetPwd/' + id,
+    url: '/manage/partner/resetPwd/'+id,
     method: 'put'
   })
 }

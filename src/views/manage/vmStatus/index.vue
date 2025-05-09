@@ -9,40 +9,38 @@
           @keyup.enter="handleQuery"
         />
       </el-form-item>
-
       <el-form-item>
         <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
+        <el-button icon="Refresh" @click="resetQuery">重置</el-button>
       </el-form-item>
     </el-form>
 
+  
 
     <el-table v-loading="loading" :data="vmList" @selection-change="handleSelectionChange">
-      <el-table-column label="序号" align="center" width="60">
-        <template #default="scope">
-          <span>{{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}</span>
-        </template>
-      </el-table-column>
+      <el-table-column label="序号" type="index" width="55" align="center" />
       <el-table-column label="设备编号" align="center" prop="innerCode" />
       <el-table-column label="设备型号" align="center" prop="vmTypeId" >
         <template #default="scope">
-          <span>{{ vmTypeList.find(item => item.id === scope.row.vmTypeId)?.name }}</span>
+          <div v-for="item in vmTypeList" :key="item.id">
+            <span v-if="item.id==scope.row.vmTypeId">{{ item.name }}</span>
+          </div>
         </template>
       </el-table-column>
-      <el-table-column label="详细地址" align="center" prop="addr" />
+      <el-table-column label="详细地址" align="left" prop="addr" show-overflow-tooltip="true"/>
       <el-table-column label="运营状态" align="center" prop="vmStatus">
         <template #default="scope">
           <dict-tag :options="vm_status" :value="scope.row.vmStatus"/>
         </template>
       </el-table-column>
-       <el-table-column label="设备状态" align="center" prop="vmStatus">
+      <el-table-column label="设备状态" align="center" prop="vmStatus">
         <template #default="scope">
-          <span v-if="scope.row.runningStatus != null">{{ JSON.parse(scope.row.runningStatus).status ==true ? '正常' : '异常'}}</span>
-          <span v-else>异常</span>
+         {{ scope.row.runningStatus!=null? JSON.parse(scope.row.runningStatus).status==true?'正常':'异常' :'异常'}}
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
-          <el-button link type="primary" @click="getVmInfo(scope.row)" v-hasPermi="['manage:vm:query']">查看详情</el-button>
+          <el-button link type="primary"  @click="getVmInfo(scope.row)" v-hasPermi="['manage:vm:query']">查看详情</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -63,10 +61,12 @@
 
 <script setup name="Vm">
 import { listVm, getVm, delVm, addVm, updateVm } from "@/api/manage/vm";
-import { listVmType } from "@/api/manage/vmType";
-import { listPartner } from "@/api/manage/partner";
-import { listNode } from "@/api/manage/node";
-import {loadAllParams} from "@/api/page";
+import{listVmType} from "@/api/manage/vmType";
+import{listPartner} from "@/api/manage/partner";
+import{loadAllParams} from "@/api/page";
+import{listNode} from "@/api/manage/node";
+import{listRegion} from "@/api/manage/region";
+import { ref } from "vue";
 
 const { proxy } = getCurrentInstance();
 const { vm_status } = proxy.useDict('vm_status');
@@ -161,14 +161,21 @@ function resetQuery() {
   handleQuery();
 }
 
-/** 多选框选中数据 */
+// 多选框选中数据
 function handleSelectionChange(selection) {
   ids.value = selection.map(item => item.id);
   single.value = selection.length != 1;
   multiple.value = !selection.length;
 }
 
-/** 查看详情操作 */
+/** 新增按钮操作 */
+function handleAdd() {
+  reset();
+  open.value = true;
+  title.value = "添加设备管理";
+}
+
+/** 修改按钮操作 */
 function getVmInfo(row) {
   reset();
   const _id = row.id || ids.value
@@ -179,33 +186,80 @@ function getVmInfo(row) {
   });
 }
 
+/** 提交按钮 */
+function submitForm() {
+  proxy.$refs["vmRef"].validate(valid => {
+    if (valid) {
+      if (form.value.id != null) {
+        updateVm(form.value).then(response => {
+          proxy.$modal.msgSuccess("修改成功");
+          open.value = false;
+          getList();
+        });
+      } else {
+        addVm(form.value).then(response => {
+          proxy.$modal.msgSuccess("新增成功");
+          open.value = false;
+          getList();
+        });
+      }
+    }
+  });
+}
 
-//查询设备型号
-const vmTypeList = ref([]);
+/** 删除按钮操作 */
+function handleDelete(row) {
+  const _ids = row.id || ids.value;
+  proxy.$modal.confirm('是否确认删除设备管理编号为"' + _ids + '"的数据项？').then(function() {
+    return delVm(_ids);
+  }).then(() => {
+    getList();
+    proxy.$modal.msgSuccess("删除成功");
+  }).catch(() => {});
+}
+
+/** 导出按钮操作 */
+function handleExport() {
+  proxy.download('manage/vm/export', {
+    ...queryParams.value
+  }, `vm_${new Date().getTime()}.xlsx`)
+}
+
+/* 查询设备类型列表 */
+const vmTypeList=ref([]);
 function getVmTypeList() {
   listVmType(loadAllParams).then(response => {
     vmTypeList.value = response.rows;
   });
 }
 
-//查询合作商名称
-const partnerNameList = ref([]);
-function getPartnerNameList() {
+/* 查询合作商列表 */
+const partnerList=ref([]);
+function getPartnerList() {
   listPartner(loadAllParams).then(response => {
-    partnerNameList.value = response.rows;
+    partnerList.value = response.rows;
   });
 }
 
-//查询点位名称
-const nodeNameList = ref([]);
-function getNodeNameList() {
+/* 查询点位列表 */
+const nodeList=ref([]);
+function getNodeList() {
   listNode(loadAllParams).then(response => {
-    nodeNameList.value = response.rows;
+    nodeList.value = response.rows;
   });
 }
 
+/* 查询区域列表 */
+const regionList=ref([]);
+function getRegionList() {
+  listRegion(loadAllParams).then(response => {
+    regionList.value = response.rows;
+  });
+}
+
+getRegionList();
+getNodeList();
+getPartnerList();
 getVmTypeList();
-getPartnerNameList();
-getNodeNameList();
 getList();
 </script>

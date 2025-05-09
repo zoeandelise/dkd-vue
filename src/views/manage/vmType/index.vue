@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="型号搜索" prop="name">
+      <el-form-item label="型号名称" prop="name">
         <el-input
           v-model="queryParams.name"
           placeholder="请输入型号名称"
@@ -25,6 +25,35 @@
           v-hasPermi="['manage:vmType:add']"
         >新增</el-button>
       </el-col>
+      <el-col :span="1.5">
+        <el-button
+          type="success"
+          plain
+          icon="Edit"
+          :disabled="single"
+          @click="handleUpdate"
+          v-hasPermi="['manage:vmType:edit']"
+        >修改</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button
+          type="danger"
+          plain
+          icon="Delete"
+          :disabled="multiple"
+          @click="handleDelete"
+          v-hasPermi="['manage:vmType:remove']"
+        >删除</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button
+          type="warning"
+          plain
+          icon="Download"
+          @click="handleExport"
+          v-hasPermi="['manage:vmType:export']"
+        >导出</el-button>
+      </el-col>
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
@@ -42,8 +71,8 @@
       <el-table-column label="设备容量" align="center" prop="channelMaxCapacity" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
-          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['manage:vmType:edit']">修改</el-button>
-          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['manage:vmType:remove']">删除</el-button>
+          <el-button link type="primary"  @click="handleUpdate(scope.row)" v-hasPermi="['manage:vmType:edit']">修改</el-button>
+          <el-button link type="primary"  @click="handleDelete(scope.row)" v-hasPermi="['manage:vmType:remove']">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -66,32 +95,25 @@
           <el-input v-model="form.model" placeholder="请输入型号编码" />
         </el-form-item>
         <el-form-item label="货道数" prop="vmRow">
-          <el-input v-model="form.vmRow" placeholder="请输入货道行" style="width: 80px;" type="number" min="0" /> 
-          <span class="ml10 mr10">行</span>
-          <el-input v-model="form.vmCol" placeholder="请输入货道列" style="width: 80px;" type="number" min="0" /> 
-          <span class="ml10">列</span>
+          <el-input-number :min="1" :max="10" v-model="form.vmRow" placeholder="请输入货道行" /> 行 &nbsp;&nbsp;
+          <el-input-number :min="1" :max="10" v-model="form.vmCol" placeholder="请输入货道列" /> 列
         </el-form-item>
-        <el-form-item label="货道容量" prop="channelMaxCapacity">
-          <el-input v-model="form.channelMaxCapacity" placeholder="请输入货道容量" style="width: 180px;" type="number" min="0" />
-          <span class="ml10">个</span>
+        <el-form-item label="设备容量" prop="channelMaxCapacity">
+          <el-input-number
+            v-model="form.channelMaxCapacity"
+            :min="1"
+            :max="10"
+            placeholder="请输入设备容量"
+          />
         </el-form-item>
         <el-form-item label="设备图片" prop="image">
-          <image-upload v-model="form.image">
-            <template #default>
-              <div class="image-upload-placeholder">
-                <span class="el-icon-plus">
-                  <i class="el-icon-plus"></i>
-                </span>
-                <div>上传</div>
-              </div>
-            </template>
-          </image-upload>
+          <image-upload v-model="form.image"/>
         </el-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="cancel">取消</el-button>
-          <el-button type="primary" @click="submitForm">确定</el-button>
+          <el-button type="primary" @click="submitForm">确 定</el-button>
+          <el-button @click="cancel">取 消</el-button>
         </div>
       </template>
     </el-dialog>

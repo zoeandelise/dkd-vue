@@ -203,6 +203,7 @@
 </template>
 
 <script setup name="Task">
+
 import {
   listTask,
   getTask,
@@ -425,5 +426,6 @@ const handleClose = () => {
 getTaskTypeList();
 
 getList();
+
 </script>
 <style lang="scss" scoped src="./index.scss"></style>

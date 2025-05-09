@@ -59,7 +59,7 @@
 
     <el-table v-loading="loading" :data="skuClassList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="序号" align="center" type="index" width="50" />
+      <el-table-column label="序号" type="index" width="50" align="center" prop="classId" />
       <el-table-column label="商品类型" align="center" prop="className" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">

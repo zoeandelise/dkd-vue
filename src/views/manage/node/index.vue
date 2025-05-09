@@ -136,16 +136,11 @@
         </div>
       </template>
     </el-dialog>
-
     <!-- 查看详情 -->
      <el-dialog title="点位详情" v-model="nodeOpen" width="600px" append-to-body>
         <el-table  :data="vmList" >
         <el-table-column label="序号" type="index" width="55" align="center" />
-        <el-table-column label="设备编号" align="center" prop="innerCode" >
-          <template #default="scope">
-            <span>{{scope.row.innerCode }}</span>
-          </template>
-        </el-table-column>
+        <el-table-column label="设备编号" align="center" prop="innerCode" />
         <el-table-column label="设备状态" align="center" prop="vmStatus">
           <template #default="scope">
             <dict-tag :options="vm_status" :value="scope.row.vmStatus"/>
@@ -166,13 +161,12 @@ import { listNode, getNode, delNode, addNode, updateNode } from "@/api/manage/no
 import {listRegion} from "@/api/manage/region";
 import {listPartner} from "@/api/manage/partner";
 import{loadAllParams} from "@/api/page";
-import { listVm } from "@/api/manage/vm";
+import{listVm} from "@/api/manage/vm";
 import { ref } from "vue";
 
 const { proxy } = getCurrentInstance();
 const { business_type } = proxy.useDict('business_type');
 const { vm_status } = proxy.useDict('vm_status');
-
 
 const nodeList = ref([]);
 const open = ref(false);
@@ -284,16 +278,15 @@ function handleUpdate(row) {
     title.value = "修改点位管理";
   });
 }
-/** 查看详情 */
+/* 查看详情 */
 const nodeOpen=ref(false);
 const vmList=ref([]);
 function getNodeInfo(row){
   // 根据点位，查询设备列表
-  loadAllParams.nodeId = row.id;
+  loadAllParams.nodeId=row.id;
   listVm(loadAllParams).then(response => {
-    vmList.value = response.rows;
-    nodeOpen.value = true;
-    title.value = "查看点位详情";
+    vmList.value=response.rows;
+    nodeOpen.value=true;
   });
 }
 
@@ -335,6 +328,12 @@ function handleExport() {
     ...queryParams.value
   }, `node_${new Date().getTime()}.xlsx`)
 }
+/* 查询所有的条件对象 */
+/* const loadAllParams=reactive({
+  pageNum:1,
+  pageSize:10000
+}) */
+
 
 /* 查询区域列表 */
 const regionList=ref([]);
@@ -349,10 +348,8 @@ const partnerList=ref([]);
 function getPartnerList(){
   listPartner(loadAllParams).then(response => {
     partnerList.value = response.rows;
-    console.log(partnerList.value);
   });
 }
-
 getPartnerList();
 getRegionList();
 getList();
